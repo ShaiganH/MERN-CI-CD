@@ -2,35 +2,22 @@ version: "3.8"
 
 services:
   mongo:
-    image: mongo
-    restart: always
+    image: mongo:latest
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: root
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=root # Changed to match your .env
+      - MONGO_INITDB_DATABASE=task-manager # Changed to match your .env
     networks:
       - mongo-network
     volumes:
       - mongo-data:/data/db
 
-  mongo-express:
-    image: mongo-express
-    restart: always
-    ports:
-      - 8081:8081
-    environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: root
-      ME_CONFIG_MONGODB_ADMINPASSWORD: root
-      ME_CONFIG_MONGODB_URL: mongodb://root:root@mongo:27017/task-manager?authSource=admin
-      ME_CONFIG_BASICAUTH: false
-    networks:
-      - mongo-network
-
-  server:
+  app: # Changed from mongo-express to app
     build:
-      context: ./backend
+      context: .
     container_name: server
     ports:
-      - "5000:5000"
+      - 5000:5000
     environment:
       - MONGO_URI=mongodb://root:root@mongo:27017/task-manager?authSource=admin
       - PORT=5000
@@ -38,8 +25,9 @@ services:
       - mongo-network
     depends_on:
       - mongo
+    restart: unless-stopped
     volumes:
-      - ./backend:/app
+      - ./:/app # Only if you need hot-reload during development
       - /app/node_modules
 
 volumes:
